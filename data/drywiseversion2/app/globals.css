@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+/* Semantic tokens: ใช้ชื่อตามหน้าที่ ไม่ใส่ hex ตรงๆ ใน component */
+:root {
+  color-scheme: light dark;
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --line: #d5dde8;
+  --ink: #0f172a;
+  --muted: #475569; /* 7.6:1 บนพื้นขาว */
+
+  /* สีกราฟ (ตัวเลขใหญ่ใช้สี ink เสมอ สีใช้กับเส้น/ไอคอนเท่านั้น) */
+  --temp: #c2410c;
+  --humid: #0369a1;
+  --light: #a16207;
+  --weight: #6d28d9;
+
+  --ok-bg: #d1fae5;
+  --ok-fg: #065f46;
+  --warn-bg: #fef3c7;
+  --warn-fg: #92400e;
+  --bad-bg: #fee2e2;
+  --bad-fg: #991b1b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1220;
+    --surface: #131c2f;
+    --line: #26334d;
+    --ink: #f1f5f9;
+    --muted: #a3b1c6; /* 7.8:1 บน --surface */
+
+    --temp: #fb923c;
+    --humid: #38bdf8;
+    --light: #facc15;
+    --weight: #a78bfa;
+
+    --ok-bg: #064e3b;
+    --ok-fg: #a7f3d0;
+    --warn-bg: #451a03;
+    --warn-fg: #fde68a;
+    --bad-bg: #450a0a;
+    --bad-fg: #fecaca;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-ok-bg: var(--ok-bg);
+  --color-ok-fg: var(--ok-fg);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-fg: var(--warn-fg);
+  --color-bad-bg: var(--bad-bg);
+  --color-bad-fg: var(--bad-fg);
+  --font-sans: var(--font-noto), system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.live-dot {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
