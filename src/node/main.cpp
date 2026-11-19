@@ -2,21 +2,22 @@
 #include <WiFi.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
-#include <math.h>
+#include <DHT.h>
 #include "messages.h"
 
-#define WIFI_CH 6   // ต้องตรงกับ channel ที่ gateway พิมพ์ออกมา
+#define DHT_PIN 27
+#define WIFI_CH 9   // ต้องตรงกับ channel ที่ gateway พิมพ์ออกมา
 
-// วันนี้ใช้ broadcast ไปก่อน ไม่ต้องรู้ MAC ของ gateway
-// ภายหลังเปลี่ยนเป็น MAC จริงของ gateway เพื่อทำ unicast + ACK
+// broadcast ไปก่อน ภายหลังค่อยเปลี่ยนเป็น MAC จริงของ gateway
 uint8_t GW_MAC[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
+DHT dht(DHT_PIN, DHT22);
 uint32_t seq = 0;
-float simW = 800.0;   // น้ำหนักผ้าจำลอง (g)
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
+  dht.begin();
 
   WiFi.mode(WIFI_STA);
   esp_wifi_set_promiscuous(true);
@@ -35,17 +36,12 @@ void loop() {
   Msg m = {};
   strcpy(m.node_id, "rack01");
   m.seq = ++seq;
-
-  // ===== ค่าจำลอง: แทนด้วยการอ่านเซนเซอร์จริงภายหลัง =====
-  simW -= 0.5 + random(0, 10) / 20.0;          // น้ำหนักลดลงเหมือนผ้ากำลังแห้ง
-  if (simW < 300) simW = 800;                   // เริ่มรอบใหม่
-  m.w_g = simW;                                 // <- แทนด้วย scale.get_units()
-  m.t_c = 30 + 3 * sin(millis() / 60000.0) + random(-5, 5) / 10.0;      // <- dht.readTemperature()
-  m.rh  = 60 + 10 * sin(millis() / 90000.0 + 1) + random(-5, 5) / 10.0; // <- dht.readHumidity()
-  // =====================================================
+  m.t_c = dht.readTemperature();   // อ่านพลาดจะได้ NaN
+  m.rh  = dht.readHumidity();
+  m.w_g = -1;                      // ยังไม่มี HX711 (เว็บจะแสดง "ไม่มี HX711")
 
   esp_err_t r = esp_now_send(GW_MAC, (uint8_t *)&m, sizeof(m));
-  Serial.printf("seq=%u w=%.1f t=%.1f rh=%.1f send=%s\n",
-                m.seq, m.w_g, m.t_c, m.rh, r == ESP_OK ? "ok" : "fail");
+  Serial.printf("seq=%u t=%.1f rh=%.1f send=%s\n",
+                m.seq, m.t_c, m.rh, r == ESP_OK ? "ok" : "fail");
   delay(5000);
 }

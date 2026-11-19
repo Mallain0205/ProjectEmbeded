@@ -76,8 +76,10 @@ export default function Home() {
   const hasWeight = r !== undefined && r.w_g !== null && r.w_g >= 0;
   const down = error !== null || stale;
 
-  const series = (f: (r: Reading) => number | null) =>
-    points.map((p) => f(p.r)).filter((v): v is number => v !== null);
+  const series = (f: (r: Reading) => number | undefined) =>
+    points
+      .map((p) => f(p.r))
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
   const fmt = (n: number | null | undefined, d = 1) =>
     n == null || Number.isNaN(n) ? "–" : n.toFixed(d);
 
@@ -161,8 +163,8 @@ export default function Home() {
         />
         <MetricCard
           label="ความสว่าง"
-          value={r && r.light_raw !== null ? lightLabel(r.light_raw) : "–"}
-          unit={r && r.light_raw !== null ? `raw ${r.light_raw}` : ""}
+          value={r?.light_raw !== undefined ? lightLabel(r.light_raw) : "–"}
+          unit={r?.light_raw !== undefined ? `raw ${r.light_raw}` : "ไม่มี KY-018"}
           color="var(--light)"
           icon={<SunIcon />}
           history={series((x) => x.light_raw)}
@@ -218,6 +220,16 @@ export default function Home() {
           }
           muted={r?.rack_pos === undefined}
         />
+        <Tile
+          title="เซนเซอร์ฝน"
+          icon={<CloudRainIcon />}
+          value={r?.rain === undefined ? "รอเซนเซอร์" : r.rain ? "เปียก (ฝน)" : "แห้ง"}
+          muted={r?.rain === undefined}
+        >
+          {r?.rain_raw !== undefined && (
+            <p className="mt-2 text-xs text-muted">raw {r.rain_raw}</p>
+          )}
+        </Tile>
       </div>
 
       <footer className="mt-6 flex flex-wrap justify-between gap-2 text-xs text-muted">
