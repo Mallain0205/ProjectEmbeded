@@ -19,7 +19,7 @@ import type { ApiResponse, Reading } from "@/lib/types";
 
 const POLL_MS = 2000;
 const MAX_POINTS = 60;
-const STALE_MS = 10000;
+const STALE_MS = 15000;
 
 // เกณฑ์ตามลอจิกควบคุมในโน้ตโปรเจกต์
 const RAIN_HIGH = 0.6; // เข้าที่ร่ม
@@ -73,12 +73,13 @@ export default function Home() {
   const r = latest?.r;
   const age = latest ? now - latest.t : null;
   const stale = age !== null && age > STALE_MS && source === "netpie";
-  const hasWeight = r !== undefined && r.w_g >= 0;
+  const hasWeight = r !== undefined && r.w_g !== null && r.w_g >= 0;
   const down = error !== null || stale;
 
-  const series = (f: (r: Reading) => number) => points.map((p) => f(p.r));
-  const fmt = (n: number | undefined, d = 1) =>
-    n === undefined || Number.isNaN(n) ? "–" : n.toFixed(d);
+  const series = (f: (r: Reading) => number | null) =>
+    points.map((p) => f(p.r)).filter((v): v is number => v !== null);
+  const fmt = (n: number | null | undefined, d = 1) =>
+    n == null || Number.isNaN(n) ? "–" : n.toFixed(d);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
@@ -160,8 +161,8 @@ export default function Home() {
         />
         <MetricCard
           label="ความสว่าง"
-          value={r ? lightLabel(r.light_raw) : "–"}
-          unit={r ? `raw ${r.light_raw}` : ""}
+          value={r && r.light_raw !== null ? lightLabel(r.light_raw) : "–"}
+          unit={r && r.light_raw !== null ? `raw ${r.light_raw}` : ""}
           color="var(--light)"
           icon={<SunIcon />}
           history={series((x) => x.light_raw)}
